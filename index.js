@@ -7,27 +7,10 @@ const bot = mineflayer.createBot({
     host: 'localhost',
     port: 61039,
     username: 'Bot',
-})
+});
 
 bot.loadPlugin(pathfinder)
 
-function followPlayer() {
-    const playerCI = bot.players['TheDudeFromCI']
-
-    if (!playerCI || !playerCI.entity) {
-        bot.chat("I can't see CI!")
-        return
-    }
-
-    const mcData = require('minecraft-data')(bot.version)
-    const movements = new Movements(bot, mcData)
-    movements.scafoldingBlocks = []
-
-    bot.pathfinder.setMovements(movements)
-
-    const goal = new GoalFollow(playerCI.entity, 1)
-    bot.pathfinder.setGoal(goal, true)
-}
 
 function locateEmeraldBlock () {
     const mcData = require('minecraft-data')(bot.version)
