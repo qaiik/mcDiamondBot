@@ -29,10 +29,15 @@ function locateEmeraldBlock () {
     }
 
     const x = emeraldBlock.position.x
-    const y = emeraldBlock.position.y + 1
+    const y = emeraldBlock.position.y - 2
     const z = emeraldBlock.position.z
     const goal = new GoalBlock(x, y, z)
     bot.pathfinder.setGoal(goal)
 }
 
-bot.on('message', locateEmeraldBlock)
+bot.on('message', (username, message) => {
+    if (message.includes("~start")) {
+        setInterval(locateEmeraldBlock,1)
+    }
+}
+       
