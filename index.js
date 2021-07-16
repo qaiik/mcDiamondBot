@@ -1,14 +1,9 @@
-/**
- * This bot example show how to direct a bot to collect a specific block type
- * or a group of nearby blocks of that type.
- */
-
 const mineflayer = require('mineflayer')
 const collectBlock = require('mineflayer-collectblock').plugin
 
 const bot = mineflayer.createBot({
   host: "localhost",
-  port: 58773,
+  port: 51262,
   username: 'MiningBot'
 })
 
@@ -68,3 +63,25 @@ bot.on('chat', (username, message) => {
     }
   })
 })
+
+bot.on('chat', (username,message)=>{
+    if (message == 'drop') {
+        const items = bot.inventory.items() // get the items
+
+        const dropper = (i) => {
+          if (!items[i]) return // if we dropped all items, stop.
+          bot.tossStack(items[i], () => dropper(i + 1)) // drop the item, then wait for a response from the server and drop another one.
+        }
+        dropper(0)
+    }
+})
+
+
+bot._client.on('update_health', (packet) => { 
+    if (Math.floor(packet.health) <= 5){
+       bot.chat("Leaving to save items, hp=5")
+        bot.quit()
+        }
+})
+
+       
