@@ -1,43 +1,70 @@
+/**
+ * This bot example show how to direct a bot to collect a specific block type
+ * or a group of nearby blocks of that type.
+ */
+
 const mineflayer = require('mineflayer')
-const { pathfinder, Movements, goals } = require('mineflayer-pathfinder')
-const GoalFollow = goals.GoalFollow
-const GoalBlock = goals.GoalBlock
+const collectBlock = require('mineflayer-collectblock').plugin
 
 const bot = mineflayer.createBot({
-    host: 'localhost',
-    port: 61039,
-    username: 'Bot',
-});
+  host: "localhost",
+  port: 58773,
+  username: 'MiningBot'
+})
 
-bot.loadPlugin(pathfinder)
+bot.on('error',(e)=>{
+    console.log(e)
+})
 
+bot.loadPlugin(collectBlock)
 
-function locateEmeraldBlock () {
-    const mcData = require('minecraft-data')(bot.version)
-    const movements = new Movements(bot, mcData)
-    movements.scafoldingBlocks = []
-    bot.pathfinder.setMovements(movements)
+let mcData
+bot.once('spawn', () => {
+  mcData = require('minecraft-data')(bot.version)
+})
 
-    const emeraldBlock = bot.findBlock({
-        matching: mcData.blocksByName.diamond_ore.id,
-        maxDistance: 500000000000000
-    })
+bot.on('chat', (username, message) => {
+  const args = message.split(' ')
+  if (args[0] !== 'collect') return
 
-    if (!emeraldBlock) {
-        bot.chat("I can't see any diamond ore")
-        return
+  let count = 1
+  if (args.length === 3) count = parseInt(args[1])
+
+  let type = args[1]
+  if (args.length === 3) type = args[2]
+
+  const blockType = mcData.blocksByName[type]
+  if (!blockType) {
+    bot.chat(`"I don't know any blocks named ${type}.`)
+    return
+  }
+
+  const blocks = bot.findBlocks({
+    matching: blockType.id,
+    maxDistance: 1000000000,
+    count: count
+  })
+
+  if (blocks.length === 0) {
+    bot.chat("I don't see that block nearby.")
+    return
+  }
+
+  const targets = []
+  for (let i = 0; i < Math.min(blocks.length, count); i++) {
+    targets.push(bot.blockAt(blocks[i]))
+  }
+
+  bot.chat(`Found ${targets.length} ${type}(s)`)
+
+  bot.collectBlock.collect(targets, err => {
+    if (err) {
+      // An error occurred, report it.
+      bot.chat(err.message)
+      console.log(err)
+    } else {
+      // All blocks have been collected.
+      bot.chat('Done')
     }
-
-    const x = emeraldBlock.position.x
-    const y = emeraldBlock.position.y - 2
-    const z = emeraldBlock.position.z
-    const goal = new GoalBlock(x, y, z)
-    bot.pathfinder.setGoal(goal)
-}
-
-bot.on('message', (username, message) => {
-    if (message.includes("~start")) {
-        setInterval(locateEmeraldBlock,1)
-    }
-}
-       
+  })
+})
