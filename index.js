@@ -20,7 +20,7 @@ bot.once('spawn', () => {
 
 bot.on('chat', (username, message) => {
   const args = message.split(' ')
-  if (args[0] !== 'collect') return
+  if (args[0] !== 'mine') return
 
   let count = 1
   if (args.length === 3) count = parseInt(args[1])
